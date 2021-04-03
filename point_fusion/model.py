@@ -63,7 +63,7 @@ if __name__ == '__main__':
     pts_feats = in_pc[:, 3:, :].transpose(1, 2)
     # pts_feats = in_pc[:, 3:, :]
     out = fuse.forward([rgb_featurized], pts, pts_feats, [img_meta, img_meta])
-    # print(out.shape)
-    out = out.reshape(batch_size, num_points, ft_dim).transpose(1, 2)
     print(out.shape)
+        # out = out.reshape(batch_size, num_points, ft_dim).transpose(1, 2)
+        # print(out.shape)
 

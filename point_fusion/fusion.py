@@ -219,6 +219,8 @@ class PointFusion(nn.Module):
         Returns:
             torch.Tensor: Fused features of each point.
         """
+        # print(img_feats[0].shape)
+        # sys.exit(1)
         img_pts = self.obtain_mlvl_feats(img_feats, pts, img_metas)
         # print(img_pts.shape)
         # sys.exit(1)
@@ -228,7 +230,7 @@ class PointFusion(nn.Module):
         if self.training and self.dropout_ratio > 0:
             img_pre_fuse = F.dropout(img_pre_fuse, self.dropout_ratio)
 
-        # print(pts_feats.shape)
+        batch_size, num_points = pts_feats.shape[0], pts_feats.shape[1]
         pts_feats_flat = pts_feats.reshape(-1, pts_feats.shape[2])
         # print(pts_feats_flat.shape)
         # sys.exit(1)
@@ -236,7 +238,9 @@ class PointFusion(nn.Module):
         # print(pts_pre_fuse.shape)
         # sys.exit(1)
 
-        fuse_out = img_pre_fuse + pts_pre_fuse
+        # fuse_out = img_pre_fuse + pts_pre_fuse
+        fuse_out = torch.cat([img_pre_fuse.view(batch_size, num_points, -1),
+                                pts_pre_fuse.view(batch_size, num_points, -1)], dim=2)
         if self.activate_out:
             fuse_out = F.relu(fuse_out)
         if self.fuse_out:
