@@ -44,7 +44,7 @@ class DETR_Encoder(nn.Module):
         return out
 
 class PointNet_Encoder(nn.Module):
-    def __init__(self, num_pc_feats):
+    def __init__(self, num_pc_feats, num_features):
         super(PointNet_Encoder, self).__init__()
 
         self.sa1 = PointNetSetAbstractionMsg(1024, [0.05, 0.1], [16, 32], num_pc_feats, [[16, 16, 32], [32, 32, 64]])
@@ -55,6 +55,14 @@ class PointNet_Encoder(nn.Module):
         self.fp3 = PointNetFeaturePropagation(128+128+256, [256, 256])
         self.fp2 = PointNetFeaturePropagation(32+64+256, [256, 128])
         self.fp1 = PointNetFeaturePropagation(128, [128, 128, 128])
+        
+        self.conv1 = nn.Conv1d(128, 128, 1)
+        self.bn1 = nn.BatchNorm1d(128)
+        self.drop1 = nn.Dropout(0.5)
+        self.conv2 = nn.Conv1d(128, 32, 1)
+        self.bn2 = nn.BatchNorm1d(32)
+        self.drop2 = nn.Dropout(0.5)
+        self.conv3 = nn.Conv1d(32, 1, 1)
 
     def forward(self, xyz):
         l0_points = xyz
@@ -64,6 +72,9 @@ class PointNet_Encoder(nn.Module):
         l2_xyz, l2_points = self.sa2(l1_xyz, l1_points)
         l3_xyz, l3_points = self.sa3(l2_xyz, l2_points)
         l4_xyz, l4_points = self.sa4(l3_xyz, l3_points)
+        # print(l4_xyz.shape)
+        # print(l4_points.shape)
+        # print()
 
         l3_points = self.fp4(l3_xyz, l4_xyz, l3_points, l4_points)
         l2_points = self.fp3(l2_xyz, l3_xyz, l2_points, l3_points)
@@ -71,5 +82,8 @@ class PointNet_Encoder(nn.Module):
         l0_points = self.fp1(l0_xyz, l1_xyz, None, l1_points)
 
         x = l0_points
-
+        x = self.drop1(F.relu(self.bn1(self.conv1(l0_points))))
+        x = self.drop2(F.relu(self.bn2(self.conv2(x))))
+        x = self.conv3(x)
+        
         return x
