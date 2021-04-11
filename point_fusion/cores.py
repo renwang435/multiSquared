@@ -5,11 +5,11 @@ import torch.nn.functional as F
 from utils import PointNetSetAbstractionMsg,PointNetFeaturePropagation
 
 class DETR_Encoder(nn.Module):
-    def __init__(self, img_size=256, patch_size=16, ft_dim=128):
+    def __init__(self, img_h=256, img_w=256, patch_size=16, ft_dim=128):
         super(DETR_Encoder, self).__init__()
     
         vit_encoder = ViT(
-            image_size = img_size,
+            image_size = max(img_h, img_w),
             patch_size = patch_size,
             num_classes = 1000,
             dim = ft_dim,
@@ -24,9 +24,11 @@ class DETR_Encoder(nn.Module):
             vit_encoder.dropout,
             vit_encoder.transformer
         )
-        self.img_size = img_size
+        self.img_h = img_h
+        self.img_w = img_w
         self.patch_size = patch_size
-        self.patch_dim = (img_size // patch_size)
+        self.patch_dim_h = (img_h // patch_size)
+        self.patch_dim_w = (img_w // patch_size)
         self.ft_dim = ft_dim
     
     def forward(self, img):
@@ -36,7 +38,7 @@ class DETR_Encoder(nn.Module):
         out = out.permute(0, 2, 1)
 
         # Reshape and tessellate to the original image dimensions
-        out = out.view(-1, self.ft_dim, self.patch_dim, self.patch_dim)
+        out = out.view(-1, self.ft_dim, self.patch_dim_h, self.patch_dim_w)
 
         out = torch.repeat_interleave(out, self.patch_size, dim=2)
         out = torch.repeat_interleave(out, self.patch_size, dim=3)

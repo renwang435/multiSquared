@@ -19,8 +19,9 @@ if __name__ == '__main__':
 
     # Make backbones
     ft_dim = 128
-    img_size = 64
-    rgb_encoder = DETR_Encoder(img_size=img_size, patch_size=8, ft_dim=ft_dim)
+    img_h = 64
+    img_w = 64
+    rgb_encoder = DETR_Encoder(img_h=img_h, img_w=img_w, patch_size=8, ft_dim=ft_dim)
     pc_encoder = PointNet_Encoder(num_pc_feats)
     
     # Run backbones
